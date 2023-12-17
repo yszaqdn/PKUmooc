@@ -37,7 +37,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    "user_info.apps.UserInfoConfig",
 ]
+
+REST_FRAMEWORK = {}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -99,13 +103,16 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Use the User from user_info
+AUTH_USER_MODEL = "user_info.User"
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Shanghai"
 
 USE_I18N = True
 
