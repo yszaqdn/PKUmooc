@@ -38,7 +38,11 @@
                         <el-input prefix-icon="Message" v-model="user.email" placeholder="请输入邮箱"></el-input>
                     </el-form-item>
 
-                    
+                    <el-form-item prop="phonenum">
+                        <el-input prefix-icon="Iphone" v-model="user.email" placeholder="请输入电话号码"></el-input>
+                    </el-form-item>
+
+
                     <el-row>
                         <el-col :span="13">
                             <el-form-item prop="name">
@@ -47,27 +51,32 @@
                         </el-col>
                         <el-col :span="10" :offset="1">
                             <el-select v-model="user.sex" placeholder="请选择性别">
-                                <el-option v-for="item in options" :key="item.value" :label="item.label"
+                                <el-option v-for="item in sexOptions" :key="item.value" :label="item.label"
                                     :value="item.value">
                                 </el-option>
                             </el-select>
                         </el-col>
                     </el-row>
-                    
-                    
+
+
                     <el-row>
                         <el-col :span="13">
-                            <el-form-item prop="school">
-                                <el-input prefix-icon="School" v-model="user.school" placeholder="请输入学院"></el-input>
+                            <el-form-item prop="dept">
+                                <el-input prefix-icon="School" v-model="user.dept" placeholder="请输入学院"></el-input>
                             </el-form-item>
                         </el-col>
-                        <el-col :span="10" :offset="1" >
-                            <el-form-item prop="grade">
-                                <el-input  v-model="user.grade" placeholder="请输入年级"></el-input>
-                            </el-form-item>
+                        <el-col :span="10" :offset="1">
+                            <el-select v-model="user.identy" placeholder="请选择身份">
+                                <el-option v-for="item in identyOptions" :key="item.value" :label="item.label"
+                                    :value="item.value">
+                                </el-option>
+                            </el-select>
                         </el-col>
                     </el-row>
-                    
+                    <el-form-item prop="grade">
+                        <el-input v-model="user.grade" placeholder="请输入年级（如果是教师，请输入0）"></el-input>
+                    </el-form-item>
+
                     <el-form-item>
                         <el-button id="registerButton" type="primary" style="width: 100%" @click="EventRegister">
                             注册
@@ -76,8 +85,7 @@
                     <div style="display: flex">
                         <div style="flex: 1; text-align: center">
                             已经有账号：请
-                            <span style="color: rgb(92, 214, 92); cursor: pointer"
-                                @click="Switch2Login">登录</span>
+                            <span style="color: rgb(92, 214, 92); cursor: pointer" @click="Switch2Login">登录</span>
                         </div>
                     </div>
                 </el-form>
@@ -90,23 +98,35 @@
 export default {
     data() {
         return {
-            options: [
+            sexOptions: [
                 {
-                    value: '男',
+                    value: 'male',
                     label: '♂',
                 },
                 {
-                    value: '女',
+                    value: 'female',
                     label: '♀',
                 }],
+            identyOptions: [
+                {
+                    value: 'teacher',
+                    label: 'teacher',
+                },
+                {
+                    value: 'student',
+                    label: 'student',
+                }],
             user: {
-                username: '',
-                password: '',
-                confirmpassword: '',
-                email: '',
-                sex: '',
-                school: '',
-                grade: '',
+                username: '', // 用户名
+                password: '',   // 密码
+                confirmpassword: '',    // 确认密码
+                email: '',  // 邮箱
+                phonenum: '',   // 电话号码
+                name: '',       // 姓名
+                sex: '',    // 性别
+                dept: '',   // 学院
+                identy: '', // 身份
+                grade: '',  // 年级
             },
             rules: {
                 username: [
@@ -146,7 +166,7 @@ export default {
                 grade: [
                     { required: true, message: '请输入年级', trigger: 'blur' },
                     {
-                        pattern: /20[0-9]{2}/,
+                        pattern: /^(20[0-9]{2}|0)$/,
                         message: "请按格式输入，如2020",
                         trigger: ["blur", "change"],
                     }
@@ -156,11 +176,11 @@ export default {
     },
 
     methods: {
-        
+
         EventRegister() {
-            // your code here
+            
         },
-        Switch2Login(){
+        Switch2Login() {
             this.$router.push('/login')
         }
     }
