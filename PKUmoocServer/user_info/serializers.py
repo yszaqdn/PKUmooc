@@ -52,7 +52,6 @@ class DeptSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dept
         fields = [
-            'id',
             'name',
         ]
 
@@ -124,3 +123,17 @@ class TeacherSerializer(serializers.ModelSerializer):
             'user_id',
             'grade',
         ]
+
+
+class RegisterSerializer(serializers.Serializer):
+    id = serializers.CharField(label="学号")
+    password = serializers.CharField(label="密码")
+    confirmpassword = serializers.CharField(label="确认密码")
+    email = serializers.EmailField(label="邮箱")
+    phone = serializers.IntegerField(label="电话号码")
+    name = serializers.CharField(label="姓名")
+    sex = serializers.CharField(label="性别")
+    dept = serializers.CharField(label="学院")
+    identity = serializers.CharField(label="身份")
+    grade = serializers.IntegerField(label="年级", required=False)
+

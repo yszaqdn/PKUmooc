@@ -30,8 +30,7 @@ class User(AbstractUser):
 
 
 class Dept(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name="学院编号")
-    name = models.CharField(max_length=200, unique=True, verbose_name="学院名称")
+    name = models.CharField(max_length=50, primary_key=True, verbose_name="学院名称")
 
     def __str__(self):
         return self.name
