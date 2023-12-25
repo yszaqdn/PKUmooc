@@ -4,7 +4,6 @@ from user_info.models import (
     User,
     Student,
     Teacher,
-    
 )
 
 class UserSerializer(serializers.ModelSerializer):

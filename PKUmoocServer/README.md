@@ -32,6 +32,34 @@ python manage.py runserver
   "grade": 2023,
 }
 ```
+现做了一点修改, 允许了GET操作, 可以在登陆后利用得到的token对`/api/register/`执行GET,
+可以得到:
+```json
+{
+  "identity": "student" / "teacher" / "other"
+}
+```
+并得到状态码200. 若未登录就执行GET操作, 会得到
+```json
+{
+  "identity": "login required"
+}
+```
+并得到代表未授权错误的状态码 401. 
+
+
+另外又把`/api/token/`改了一点, POST成功后返回的信息为
+```json
+{
+  "refresh": "...",
+  "access": "...",
+  "is_student": "true",
+  "is_teacher": "false",
+}
+```
+
+
+
 `/api/token/`: 用于登陆, 只允许POST, 接口如下: (username就是学号或admin)
 ```json
 {

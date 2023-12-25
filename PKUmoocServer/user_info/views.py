@@ -34,6 +34,11 @@ from user_info.permissions import (
     IsAdminUserOrSelf,
 )
 
+from rest_framework_simplejwt.views import TokenViewBase
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework.request import Request
+
 # Create your views here.
 
 # class UserViewSet(viewsets.ModelViewSet):
@@ -113,9 +118,48 @@ from user_info.permissions import (
 #     def get_object(self):
 #         return Teacher.objects.get(user=self.request.user)
 #
+class TokenObtainPairView(TokenViewBase):
+    """
+    Takes a set of user credentials and returns an access and refresh JSON web
+    token pair to prove the authentication of those credentials.
+    """
 
-@api_view(['POST'])
+    _serializer_class = api_settings.TOKEN_OBTAIN_SERIALIZER
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        serializer = self.get_serializer(data=request.data)
+        try:
+            user = User.objects.get(username=request.data.get("username"))
+        except:
+            pass
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        user = User.objects.get(id=user.id)
+        data = {}
+        data["refresh"] = serializer.validated_data.get("refresh")
+        data["access"]  = serializer.validated_data.get("access")
+        data["is_student"] = user.is_student
+        data["is_teacher"] = user.is_teacher
+        return Response(data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST', 'GET'])
 def user_register(request):
+    if request.method == "GET":
+        try:
+            if request.user.is_teacher:
+                return Response({'identity': 'teacher'}, status=status.HTTP_200_OK)
+            elif request.user.is_student:
+                return Response({'identity': 'student'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'identity': 'other'}, status=status.HTTP_200_OK)
+        except AttributeError:
+            return Response({'identity': 'login required'}, status=status.HTTP_401_UNAUTHORIZED)
+
     # read the request
     args_serializer = RegisterSerializer(data=request.data)
     if args_serializer.is_valid():
