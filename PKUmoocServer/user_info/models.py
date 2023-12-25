@@ -29,11 +29,6 @@ class User(AbstractUser):
         return False
 
 
-class Dept(models.Model):
-    name = models.CharField(max_length=50, primary_key=True, verbose_name="学院名称")
-
-    def __str__(self):
-        return self.name
 
 
 class Student(models.Model):
@@ -47,7 +42,7 @@ class Student(models.Model):
     def id(self, new_value):
         self.user.username = new_value
 
-    dept = models.ForeignKey(Dept, on_delete=models.CASCADE, verbose_name="学院")
+    dept = models.CharField(max_length=50, verbose_name="学院名称")
     name = models.CharField(max_length=50, verbose_name="姓名", validators=[MinLengthValidator(1)])
     sex = models.CharField(
         max_length=6, 
@@ -82,7 +77,7 @@ class Teacher(models.Model):
     def id(self, new_value):
         self.user.username = new_value
 
-    dept = models.ForeignKey(Dept, on_delete=models.CASCADE, verbose_name="学院")
+    dept = models.CharField(max_length=50, verbose_name="学院名称")
     name = models.CharField(max_length=50, verbose_name="姓名", validators=[MinLengthValidator(1)])
     sex = models.CharField(
         max_length=6, 

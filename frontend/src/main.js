@@ -10,6 +10,7 @@ const app = createApp(App)
 app.use(router)
 app.use(ElementPlus)
 app.mount('#app')
+app.config.globalProperties.SERVER = "http://127.0.0.1:8000"
 
 router.beforeEach((to, from, next) => {
     if(to.meta.title) {

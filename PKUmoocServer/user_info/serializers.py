@@ -4,7 +4,7 @@ from user_info.models import (
     User,
     Student,
     Teacher,
-    Dept,
+    
 )
 
 class UserSerializer(serializers.ModelSerializer):
@@ -48,16 +48,11 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class DeptSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Dept
-        fields = [
-            'name',
-        ]
+
 
 
 class StudentRegisterSerializer(serializers.ModelSerializer):
-    dept = serializers.PrimaryKeyRelatedField(queryset=Dept.objects.all())
+    
     
     class Meta:
         model = Student
@@ -70,7 +65,7 @@ class StudentRegisterSerializer(serializers.ModelSerializer):
         ]
 
 class StudentSerializer(serializers.ModelSerializer):
-    dept = serializers.StringRelatedField()
+    
     user = UserSerializer(read_only=True)
 
     class Meta:
@@ -92,7 +87,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
 
 class TeacherRegisterSerializer(serializers.ModelSerializer):
-    dept = serializers.PrimaryKeyRelatedField(queryset=Dept.objects.all())
+    
 
     class Meta:
         model = Teacher
@@ -105,7 +100,7 @@ class TeacherRegisterSerializer(serializers.ModelSerializer):
 
 
 class TeacherSerializer(serializers.ModelSerializer):
-    dept = serializers.StringRelatedField()
+    
     user = UserSerializer(read_only=True)
 
     class Meta:

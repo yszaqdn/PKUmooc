@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
 
-from user_info.models import User, Dept
+from user_info.models import User
 from user_info.models import Student
 from user_info.models import Teacher
 
@@ -18,7 +18,7 @@ from user_info.serializers import (
     UserRegisterSerializer,
     StudentRegisterSerializer,
     StudentSerializer,
-    DeptSerializer,
+    
     TeacherRegisterSerializer,
     TeacherSerializer,
 )
@@ -65,11 +65,7 @@ from user_info.permissions import (
 #         return User.objects.get(user=self.request.user)
 #
 
-class DeptViewSet(viewsets.ModelViewSet):
-    queryset = Dept.objects.all()
-    serializer_class = DeptSerializer
-    lookup_field = 'name'
-    permission_classes = [IsAdminUserOrReadOnly]
+
 
 
 # class StudentViewSet(viewsets.ModelViewSet):

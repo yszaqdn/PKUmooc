@@ -20,8 +20,8 @@
             </div>
             <el-scrollbar style="width: 100%; height: 100%">
                 <el-form id="registerForm" :model="user" style=" text-align: center" :rules="rules" ref="registerRef">
-                    <el-form-item prop="username">
-                        <el-input prefix-icon="Avatar" v-model="user.username" placeholder="请输入4-20位用户名"></el-input>
+                    <el-form-item prop="IDnum">
+                        <el-input prefix-icon="Avatar" v-model="user.IDnum" placeholder="请输入学号/工号"></el-input>
                     </el-form-item>
 
                     <el-form-item prop="password">
@@ -39,7 +39,7 @@
                     </el-form-item>
 
                     <el-form-item prop="phonenum">
-                        <el-input prefix-icon="Iphone" v-model="user.email" placeholder="请输入电话号码"></el-input>
+                        <el-input prefix-icon="Iphone" v-model="user.phonenum" placeholder="请输入电话号码"></el-input>
                     </el-form-item>
 
 
@@ -66,8 +66,8 @@
                             </el-form-item>
                         </el-col>
                         <el-col :span="10" :offset="1">
-                            <el-select v-model="user.identy" placeholder="请选择身份">
-                                <el-option v-for="item in identyOptions" :key="item.value" :label="item.label"
+                            <el-select v-model="user.identity" placeholder="请选择身份">
+                                <el-option v-for="item in identityOptions" :key="item.value" :label="item.label"
                                     :value="item.value">
                                 </el-option>
                             </el-select>
@@ -95,19 +95,21 @@
 </template>
 
 <script >
+import axios from "axios";
+
 export default {
     data() {
         return {
             sexOptions: [
                 {
-                    value: 'male',
+                    value: 'Male',
                     label: '♂',
                 },
                 {
-                    value: 'female',
+                    value: 'Female',
                     label: '♀',
                 }],
-            identyOptions: [
+                identityOptions: [
                 {
                     value: 'teacher',
                     label: 'teacher',
@@ -117,7 +119,7 @@ export default {
                     label: 'student',
                 }],
             user: {
-                username: '', // 用户名
+                IDnum: '', // 学号/工号
                 password: '',   // 密码
                 confirmpassword: '',    // 确认密码
                 email: '',  // 邮箱
@@ -125,13 +127,14 @@ export default {
                 name: '',       // 姓名
                 sex: '',    // 性别
                 dept: '',   // 学院
-                identy: '', // 身份
+                identity: '', // 身份
                 grade: '',  // 年级
             },
             rules: {
-                username: [
-                    { required: true, message: "请输入用户名", trigger: "blur" },
-                    { min: 4, max: 20, message: "长度在 4 到 20 个字符", trigger: ["blur", "change"] }
+                IDnum: [
+                    { required: true, message: "请输入学号/工号", trigger: "blur" },
+                    { min: 10, max: 10, message: "长度为10个字符", trigger: ["blur", "change"] },
+                    { pattern: /^[0-9]*$/, message: "学号/工号应为纯数字", trigger: ["blur", "change"] },
                 ],
                 password: [
                     { required: true, message: "请输入密码", trigger: "blur" },
@@ -177,8 +180,53 @@ export default {
 
     methods: {
 
-        EventRegister() {
-            
+        async EventRegister() {
+            let senddata ={
+                action: 'register',
+                id: this.user.IDnum,
+                password: this.user.password,
+                confirmpassword: this.user.confirmpassword,
+                email: this.user.email,
+                phone: this.user.phonenum,
+                name: this.user.name,
+                sex:this.user.sex,
+                dept: this.user.dept,
+                identity: this.user.identity,
+                grade: this.user.grade,
+            };
+
+            this.$refs.registerRef.validate(async (valid) => {
+                if (valid) {
+                    console.log(senddata);
+                    await axios
+                    .post('/api/register/', senddata)
+                    .then( res => {
+                        console.log(res);
+                        if (res.status === 201) {
+                            this.$message({
+                                message: '注册成功',
+                                type: 'success'
+                            });
+                            this.$router.push('/login')
+                        } else {
+                            alert(res.data.id);
+                            this.$message({
+                                message: res.data.message,
+                                type: 'error'
+                            });
+                        }
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+                } else {
+                    this.$message({
+                        message: '请检查输入',
+                        type: 'error'
+                    });
+                    return false;
+                }
+            });
         },
         Switch2Login() {
             this.$router.push('/login')
