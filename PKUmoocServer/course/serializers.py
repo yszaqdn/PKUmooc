@@ -1,7 +1,6 @@
 from rest_framework.schemas.coreapi import serializers
-from course.models import Course, Material
+from course.models import Course, Material, Picture
 from user_info.models import Student, Teacher
-from rest_framework.fields import SerializerMethodField
 
 
 class CourseDetailSerializer(serializers.ModelSerializer):
@@ -106,3 +105,30 @@ class MaterialListSerializer(serializers.ModelSerializer):
             "id",
             "updated_time",
         ]
+
+
+class PictureSerializer(serializers.ModelSerializer):
+    material = serializers.StringRelatedField()
+    file_path = serializers.ImageField()
+    class Meta:
+        model = Picture
+        fields = [
+            "id",
+            "file_path",
+            "file_name",
+            "created_time",
+            "material",
+        ]
+        read_only_fields = [
+            "id",
+            "file_path",
+            "created_time",
+            "material",
+        ]
+
+
+class PictureCreateSerializer(serializers.ModelSerializer):
+    material = serializers.StringRelatedField()
+    class Meta:
+        model = Picture
+        exclude = ("created_time",)

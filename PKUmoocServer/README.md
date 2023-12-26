@@ -119,3 +119,9 @@ python manage.py runserver
   "title": "数据库概论"
 }
 ```
+#### Course: Material
+嵌套在`/api/course/<str:pk>/`下, 包括`/api/course/<str:pk1>/material/` 和 `/api/course/<str:pk1>/material/<int:pk>/`两个接口.
+前者支持POST, GET方法, 后者支持PUT, GET, DELETE方法. 做了基本的权限控制但仍需改进.
+
+#### Course: Material: Picture
+嵌套在`/api/course/<str:pk1>/material/<int:pk>/`下, 类似于前者. 另外额外提供了一个下载接口, 可以通过GET方法下载图片.

@@ -1,19 +1,25 @@
 from rest_framework.response import Response
 from rest_framework.schemas.coreapi import serializers
-from course.models import Course
+from course.models import Course, Picture
 from rest_framework.views import APIView, status
-from urllib import parse
+from rest_framework.decorators import api_view
+from PKUmoocServer.settings import BASE_DIR
+import os
 
 from course.serializers import (
     CourseDetailSerializer, 
     CourseListSerializer,
     MaterialDetailSerializer,
     MaterialListSerializer,
+    PictureSerializer,
+    PictureCreateSerializer,
 )
 
-from django.http import Http404
+from django.http import FileResponse, Http404
 from user_info.models import User, Student, Teacher
 from rest_framework import generics
+
+from course.utils import img_proccess_save
 
 # Create your views here.
 
@@ -140,7 +146,8 @@ class CourseListView(APIView):
 
 class MaterialDetailView(APIView):
     """课程资料详情视图"""
-    def get_object(self, request, pk1, pk):
+    @staticmethod
+    def get_object(request, pk1, pk):
         course = CourseDetailView.get_object(request, pk1)
         if isinstance(course, Response):
             return course
@@ -210,3 +217,80 @@ class MaterialListView(APIView):
             serializer.save(teacher=request.user.teacher, course=course)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PictureListView(APIView):
+    lookup_field = "id"
+    def get(self, request, pk1, pk2):
+        material = MaterialDetailView.get_object(request, pk1, pk2)
+        if isinstance(material, Response):
+            return material
+        try:
+            pictures = material.pictures.all()
+        except:
+            return Response({"detail": "No pictures found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = PictureSerializer(pictures, many=True, context={"request": request})
+        datas = serializer.data
+        new_datas = []
+        for data in datas:
+            i = data.get("id")
+            data["url"] = request.build_absolute_uri() + str(i) + "/"
+            new_datas.append(data)
+        return Response(new_datas, status=status.HTTP_200_OK)
+
+    def post(self, request, pk1, pk2):
+        material = MaterialDetailView.get_object(request, pk1, pk2)
+        if isinstance(material, Response):
+            return material
+        serializer = PictureCreateSerializer(data=request.data, context={"request":request})
+        if serializer.is_valid():
+            image = serializer.validated_data.get("file_path")
+            img_file = str(self.request.user.username)
+            img_name, img_backend_relative_path = img_proccess_save(image, img_file)
+            if serializer.validated_data.get("file_name") == "":
+                serializer.save(material = material, file_path=img_backend_relative_path, file_name=img_name)
+            else:
+                serializer.save(material = material, file_path=img_backend_relative_path)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PictureDetailView(APIView):
+    lookup_field = "id"
+    @staticmethod
+    def get_object(request, pk1, pk2, pk):
+        material = MaterialDetailView.get_object(request, pk1, pk2)
+        if isinstance(material, Response):
+            return material
+        try:
+            picture = material.pictures.all().get(pk=pk)
+        except:
+            raise Http404
+        return picture
+
+    def get(self, request, pk1, pk2, pk):
+        picture = self.get_object(request, pk1, pk2, pk)
+        if isinstance(picture, Response):
+            return picture
+        serializer = PictureSerializer(picture, context={"request":request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk1, pk2, pk):
+        picture = self.get_object(request, pk1, pk2, pk)
+        if isinstance(picture, Response):
+            return picture
+        if os.path.exists("." + picture.file_path.url):
+            path = "." + picture.file_path.url
+            os.remove(path)
+            picture.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"detail": "path %s does not exist" % "." + picture.file_path.url}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["GET"])
+def download_picture(request, pk1, pk2, pk):
+    file_obj = PictureDetailView.get_object(request, pk1, pk2, pk)
+    if isinstance(file_obj, Response):
+        return file_obj
+    return FileResponse(open(file_obj.file_path.path, 'rb'))

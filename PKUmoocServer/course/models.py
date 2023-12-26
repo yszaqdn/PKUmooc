@@ -2,6 +2,7 @@ from django.db import models
 from datetime import datetime
 from user_info.models import Teacher, Student
 from django.utils import timezone
+import uuid
 
 # Create your models here.
 
@@ -37,3 +38,17 @@ class Material(models.Model):
 
     def __str__(self):
         return "%s : %s" %(self.course, self.title)
+
+
+class Picture(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, verbose_name="ID") # 32位uuid
+    file_path = models.FileField(unique=True, upload_to = "uploads", verbose_name="路径")
+    file_name = models.TextField(blank=True, verbose_name="文件名")
+    created_time = models.DateTimeField(default=timezone.now, verbose_name="生成时间")
+    material = models.ForeignKey(Material, on_delete=models.CASCADE, related_name="pictures")
+
+    def __str__(self):
+        return str(self.file_path)
+
+    class Meta:
+        ordering = ["-created_time"]
