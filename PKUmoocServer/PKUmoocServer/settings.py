@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "user_info.apps.UserInfoConfig",
     "course.apps.CourseConfig",
+    "forum.apps.ForumConfig",
 ]
 
 REST_FRAMEWORK = {
