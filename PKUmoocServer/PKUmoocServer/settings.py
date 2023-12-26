@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "user_info.apps.UserInfoConfig",
+    "course.apps.CourseConfig",
 ]
 
 REST_FRAMEWORK = {

@@ -36,6 +36,7 @@ urlpatterns = [
     # path("api/", include(router.urls)),
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pairi"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("api/register/", views.user_register, name="register")
+    path("api/register/", views.user_register, name="register"),
     # path("api/student/", views.student_register, name="register")
+    path("api/course/", include("course.urls"), name="course"),
 ]
