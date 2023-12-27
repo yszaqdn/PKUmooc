@@ -15,9 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 from user_info import views
+from PKUmoocServer import settings
+from django.views.static import serve
 
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -35,6 +37,8 @@ urlpatterns = [
     # path("api/", include(router.urls)),
     path("api/token/", views.TokenObtainPairView.as_view(), name="token_obtain_pairi"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("api/register/", views.user_register, name="register")
+    path("api/register/", views.user_register, name="register"),
     # path("api/student/", views.student_register, name="register")
+    path("api/course/", include("course.urls"), name="course"),
+    re_path(r"media/(?P<path>.*)$", serve, {"document_root":settings.MEDIA_ROOT}),
 ]
