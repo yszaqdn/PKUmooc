@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+
 import Register from './components/Register.vue'
 import Login from './components/Login.vue'
 import HomeStudent from './components/HomeStudent.vue'
@@ -16,8 +15,7 @@ const router = createRouter({
             component: Login,
             meta: { title: "登录" },
         },
-        { path: '/hello', component: HelloWorld },
-        { path: '/welcome', component: TheWelcome },
+        
         { 
             path: '/register', 
             component: Register,
