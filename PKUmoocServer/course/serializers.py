@@ -1,5 +1,5 @@
 from rest_framework.schemas.coreapi import serializers
-from course.models import Course, Material, Picture
+from course.models import Course, Material, Picture, Homework
 from user_info.models import Student, Teacher
 
 
@@ -40,17 +40,19 @@ class CourseListSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name="course:course-detail")
 
     teachers = serializers.SlugRelatedField(
-        queryset=Teacher.objects.all(), # type: ignore
+        # queryset=Teacher.objects.all(), # type: ignore
         many=True,
-        required=True,
-        slug_field="name"
+        # required=True,
+        slug_field="name",
+        read_only=True
     )
 
     students = serializers.SlugRelatedField(
-        queryset=Student.objects.all(), # type: ignore
+        # queryset=Student.objects.all(), # type: ignore
         many=True,
-        required=False,
-        slug_field="name"
+        # required=False,
+        slug_field="name",
+        read_only=True,
     )
 
     class Meta:
@@ -132,3 +134,39 @@ class PictureCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Picture
         exclude = ("created_time",)
+
+
+class HomeworkDetailSerializer(serializers.ModelSerializer):
+    course = serializers.StringRelatedField()
+    teacher = serializers.StringRelatedField()
+    class Meta:
+        model = Homework
+        fields = [
+            "id",
+            "title",
+            "course",
+            "teacher",
+            "view_begin_time",
+            "view_end_time",
+            "submit_begin_time",
+            "submit_end_time",
+        ]
+        read_only_fields = ["id"]
+
+
+class HomeworkListSerializer(serializers.ModelSerializer):
+    course = serializers.StringRelatedField()
+    teacher = serializers.StringRelatedField()
+    class Meta:
+        model = Homework
+        fields = [
+            "id",
+            "title",
+            "course",
+            "teacher",
+            "view_begin_time",
+            "view_end_time",
+            "submit_begin_time",
+            "submit_end_time",
+        ]
+        read_only_fields = ["id"]
