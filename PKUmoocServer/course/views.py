@@ -125,6 +125,7 @@ class CourseListView(APIView):
                 return Response({"detail": "No course taken"}, status=status.HTTP_404_NOT_FOUND)
             serializer = CourseListSerializer(courses, many=True, context={"request": request})
             return Response(serializer.data, status=status.HTTP_200_OK)
+            
         elif request.user.is_teacher:
             try:
                 courses = request.user.teacher.course_set.all()

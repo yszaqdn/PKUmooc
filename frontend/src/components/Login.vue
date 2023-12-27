@@ -81,20 +81,31 @@ export default {
                 if (valid) {
                     let senddata = {
                         action: 'login',
-                        IDnum: this.user.IDnum,
+                        username: this.user.IDnum,
                         password: this.user.password,
                     }
+                    localStorage.setItem('IDnum', this.user.IDnum)
                     axios
                         .post("/api/token/", senddata) // 路径存疑
                         .then((res) => {
+                            console.log(res);
                             if (res.status == 200) {
                                 that.$message({
                                     message: "登录成功",
                                     type: "success",
                                     duration: 1000,
                                 })
-                                that.$store.commit('setUser', res.data.data)
-                                that.$router.push('/home')
+                                if(res.data.is_student){
+                                    localStorage.setItem('identity', 'student')
+                                    localStorage.setItem('token',res.data.access)
+                                    that.$router.push('/home/student')
+                                }
+                                else{
+                                    localStorage.setItem('identity', 'teacher')
+                                    that.$router.push('/home/student')
+                                }
+                                    
+
                             }
                             else {
                                 alert("学号/工号或密码错误");
