@@ -1,28 +1,14 @@
 <template>
-    <div class="course-box">
-        <div v-for="course in courses" :key="course.id" class="courses">
-            <div class="course-info">
-                <div class="tag">
-                    ID: {{ course.id }}
-                </div>
-                <div class="tag">
-                    {{ course.year }}
-                </div>
-                <div class="tag">
-                    {{ course.session }}
-                </div>
-                <div class="tag">
-                    Teachers: {{ course.teachers.join(', ') }}
-                </div>
-                
+    <div class="material-box">
+        <div v-for="material in materials" :key="material.id" class="materials">
+            <div class="material-info">
+            <div class="tag">
+                ID: {{ material.id }}
             </div>
-            <div class="course-title">
-                <router-link :to="{name:'StudentCourse',params: { id:course.id}}">
-                {{ course.title }}
-                </router-link>
             </div>
-
-
+            <div class="title">
+                {{ material.title }}
+            </div>
         </div>
     </div>
 </template>
@@ -34,21 +20,23 @@ import { RouterLink } from 'vue-router';
 export default {
     data() {
         return {
-            courses: [],
+            materials: [],
+            assignments: [],
         };
     },
     async created() {
-        
         let token = localStorage.getItem('token');
         try {
-            const response = await axios.get('/api/course/', {
+            const response = await axios.get('/api/course/' + this.$route.params.id + '/material/', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
             console.log(response);
-            this.courses = response.data;
-            console.log(this.courses);
+
+            this.materials = response.data;
+            this.materials.sort((a, b) => a.id - b.id);
+            console.log(this.materials);
         }
         catch (error) {
             console.error(error);
@@ -57,11 +45,10 @@ export default {
     },
     components: { RouterLink }
 }
-
 </script>
 
 <style>
-.course-box {
+.material-box {
     position: absolute;
     top: 50px;
     left: 20px;
@@ -70,11 +57,7 @@ export default {
     width:40%;
     
 }
-.courses {
-    padding: 10px;
-}
-
-.course-title {
+.title {
     font-size: large;
     font-weight: bolder;
     font-family: Georgia, Arial, sans-serif;
@@ -82,11 +65,9 @@ export default {
     text-decoration: none;
     padding: 5px 5px 5px 0;
 }
-
-.course-info {
+.material-info {
     display: flex;
 }
-
 .tag {
     padding: 2px 5px 2px 5px;
     margin: 5px 5px 5px 0;

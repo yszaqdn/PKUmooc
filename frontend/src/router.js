@@ -4,7 +4,7 @@ import Register from './components/Register.vue'
 import Login from './components/Login.vue'
 import HomeStudent from './components/HomeStudent.vue'
 import HomeTeacher from './components/HomeTeacher.vue'
-
+import StudentCourse from './components/StudentCourse.vue'
 
 import APP from './App.vue'
 const router = createRouter({
@@ -27,12 +27,18 @@ const router = createRouter({
             meta: { title: "登录" },
         },
         {
-            path: '/home/student',
+            path: '/student/home',
             component: HomeStudent,
             meta: { title: "学生主页" },
         },
         {
-            path: '/home/teacher',
+            path: '/student/course/:id',
+            component: StudentCourse,
+            name: 'StudentCourse',
+            meta: { title: "课程" },
+        },
+        {
+            path: '/teacher/home',
             component: HomeTeacher,
             meta: { title: "教师主页" },
         }

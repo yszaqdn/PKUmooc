@@ -98,11 +98,11 @@ export default {
                                 if(res.data.is_student){
                                     localStorage.setItem('identity', 'student')
                                     localStorage.setItem('token',res.data.access)
-                                    that.$router.push('/home/student')
+                                    that.$router.push('/student/home')
                                 }
                                 else{
                                     localStorage.setItem('identity', 'teacher')
-                                    that.$router.push('/home/student')
+                                    that.$router.push('/teacher/home')
                                 }
                                     
 
