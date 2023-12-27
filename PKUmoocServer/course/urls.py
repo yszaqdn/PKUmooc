@@ -9,5 +9,7 @@ urlpatterns = [
     path("<str:pk1>/material/<int:pk>/", views.MaterialDetailView.as_view(), name="material-detail"),
     path("<str:pk1>/material/<int:pk2>/picture/", views.PictureListView.as_view(), name="picture-list"),
     path("<str:pk1>/material/<int:pk2>/picture/<str:pk>/", views.PictureDetailView.as_view(), name="picture-detail"),
-    path("<str:pk1>/material/<int:pk2>/picture/<str:pk>/download/", views.download_picture, name="picture-download")
+    path("<str:pk1>/material/<int:pk2>/picture/<str:pk>/download/", views.download_picture, name="picture-download"),
+    path("<str:pk1>/homework/", views.HomeworkListView.as_view(), name="homework-list"),
+    path("<str:pk1>/homework/<int:pk>/", views.HomeworkDetailView.as_view(), name="homework-detail"),
 ]

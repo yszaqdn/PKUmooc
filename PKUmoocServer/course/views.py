@@ -1,10 +1,13 @@
 from rest_framework.response import Response
 from rest_framework.schemas.coreapi import serializers
-from course.models import Course, Picture
+from course.models import Course
 from rest_framework.views import APIView, status
 from rest_framework.decorators import api_view
 from PKUmoocServer.settings import BASE_DIR
 import os
+from django.utils import timezone
+from course.permissions import IsTeacherOrReadOnly
+
 
 from course.serializers import (
     CourseDetailSerializer, 
@@ -13,6 +16,8 @@ from course.serializers import (
     MaterialListSerializer,
     PictureSerializer,
     PictureCreateSerializer,
+    HomeworkListSerializer,
+    HomeworkDetailSerializer,
 )
 
 from django.http import FileResponse, Http404
@@ -25,6 +30,7 @@ from course.utils import img_proccess_save
 
 class CourseDetailView(APIView):
     """课程详情视图"""
+    permission_classes = [IsTeacherOrReadOnly]
 
     @staticmethod
     def get_object(request, pk):
@@ -75,6 +81,7 @@ class CourseDetailView(APIView):
                 if not user.is_teacher:
                     return Response({"teachers": "only teachers can teach a course"}, status=status.HTTP_400_BAD_REQUEST)
                 teachers.append(user.teacher)
+
         elif request.data.get('teachers') is not None:
             return Response({"teachers": "this field should be multi-valued"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -116,6 +123,7 @@ class CourseDetailView(APIView):
 
 class CourseListView(APIView):
     """课程列表视图"""
+    permission_classes = [IsTeacherOrReadOnly]
     lookup_field="id"
     def get(self, request):
         if request.user.is_student:
@@ -147,6 +155,7 @@ class CourseListView(APIView):
 
 class MaterialDetailView(APIView):
     """课程资料详情视图"""
+    permission_classes = [IsTeacherOrReadOnly]
     @staticmethod
     def get_object(request, pk1, pk):
         course = CourseDetailView.get_object(request, pk1)
@@ -189,6 +198,7 @@ class MaterialDetailView(APIView):
 
 class MaterialListView(APIView):
     """课程资料列表视图"""
+    permission_classes = [IsTeacherOrReadOnly]
     lookup_field = "id"
     def get(self, request, pk1):
         course = CourseDetailView.get_object(request, pk1)
@@ -221,6 +231,7 @@ class MaterialListView(APIView):
 
 
 class PictureListView(APIView):
+    permission_classes = [IsTeacherOrReadOnly]
     lookup_field = "id"
     def get(self, request, pk1, pk2):
         material = MaterialDetailView.get_object(request, pk1, pk2)
@@ -257,6 +268,7 @@ class PictureListView(APIView):
 
 
 class PictureDetailView(APIView):
+    permission_classes = [IsTeacherOrReadOnly]
     lookup_field = "id"
     @staticmethod
     def get_object(request, pk1, pk2, pk):
@@ -295,3 +307,81 @@ def download_picture(request, pk1, pk2, pk):
     if isinstance(file_obj, Response):
         return file_obj
     return FileResponse(open(file_obj.file_path.path, 'rb'))
+
+
+
+class HomeworkDetailView(APIView):
+    permission_classes = [IsTeacherOrReadOnly]
+    lookup_field = "id"
+    @staticmethod
+    def get_object(request, pk1, pk):
+        course = CourseDetailView.get_object(request, pk1)
+        if isinstance(course, Response):
+            return course
+        try:
+            homework = course.homeworks.all().get(pk=pk)
+        except:
+            raise Http404
+        if request.user.is_student:
+            view_start_time = homework.view_start_time
+            view_end_time = homework.view_end_time
+            if timezone.now() > view_end_time:
+                return Response({"detail": "The homework cannot be seen any more"}, status=status.HTTP_404_NOT_FOUND)
+            elif timezone.now() < view_start_time:
+                return Response({"detail": "The homework cannot be seen now"}, status=status.HTTP_404_NOT_FOUND)
+        return homework
+
+    def get(self, request, pk1, pk):
+        homework = self.get_object(request, pk1, pk)
+        if isinstance(homework, Response):
+            return homework
+        serializer = HomeworkDetailSerializer(homework, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk1, pk):
+        homework = self.get_object(request, pk1, pk)
+        if isinstance(homework, Response):
+            return homework
+        serializer = HomeworkDetailSerializer(homework, data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk1, pk):
+        homework = self.get_object(request, pk1, pk)
+        if isinstance(homework, Response):
+            return homework
+        homework.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class HomeworkListView(APIView):
+    permission_classes = [IsTeacherOrReadOnly]
+    lookup_field = "id"
+    def get(self, request, pk1):
+        course = CourseDetailView.get_object(request, pk1)
+        if isinstance(course, Response):
+            return course
+        try:
+            homeworks = course.homeworks.all()
+        except:
+            return Response({"detail": "No homeworks found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = HomeworkListSerializer(homeworks, many=True, context={"request": request})
+        datas = serializer.data
+        new_datas = []
+        for data in datas:
+            i = data.get("id")
+            data["url"] = request.build_absolute_uri() + str(i) + "/"
+            new_datas.append(data)
+        return Response(new_datas, status=status.HTTP_200_OK)
+
+    def post(self, request, pk1):
+        course = CourseDetailView.get_object(request, pk1)
+        if isinstance(course, Response):
+            return course
+        serializer = HomeworkListSerializer(data=request.data, context={"request":request})
+        if serializer.is_valid():
+            serializer.save(course=course, teacher=request.user.teacher)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
