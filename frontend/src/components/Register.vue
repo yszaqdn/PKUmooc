@@ -6,8 +6,8 @@
         align-items: center;
         justify-content: center;
         text-align: center;
-        width: 80%;
-        height: 100%;
+        width: 40%;
+        height: 80%;
         flex-grow: 0;
       ">
             <div style="
@@ -166,6 +166,14 @@ export default {
                         trigger: ["blur", "change"],
                     }
                 ],
+                phonenum: [
+                    { required: true, message: '请输入电话号码', trigger: 'blur' },
+                    {
+                        pattern: /^1[3456789]\d{9}$/,
+                        message: "电话号码格式错误",
+                        trigger: ["blur", "change"],
+                    }
+                ],
                 grade: [
                     { required: true, message: '请输入年级', trigger: 'blur' },
                     {
@@ -237,6 +245,9 @@ export default {
 
 <style>
 .registerBox {
+    position: absolute;
+    top: 50px;
+    left: 150px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -244,8 +255,8 @@ export default {
     text-align: center;
 
     background-color: white;
-    width: 100%;
-    height: 100%;
+    width: 80%;
+    height: 80%;
     border-radius: 4px;
 
 }
