@@ -104,18 +104,18 @@ class Choice(models.Model):
 class Submission(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="编号")
     student = models.ForeignKey(to=Student, verbose_name="提交者", on_delete=models.CASCADE)
-    homework = models.ForeignKey(to=Homework, verbose_name="作业", on_delete=models.CASCADE)
+    homework = models.ForeignKey(to=Homework, verbose_name="作业", on_delete=models.CASCADE, related_name="submissions")
     is_submitted = models.BooleanField(default=False, verbose_name="是否已提交") # type: ignore
     is_checked = models.BooleanField(default=False, verbose_name="是否已批改") # type: ignore
     score = models.SmallIntegerField(default=-1, verbose_name="成绩") # type: ignore
-    remark = models.TextField(verbose_name="评语")
+    remark = models.TextField(default="", verbose_name="评语")
 
 class Answer(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="编号")
-    submission = models.ForeignKey(to=Submission, verbose_name="提交", on_delete=models.CASCADE)
-    problem = models.ForeignKey(to=Problem, on_delete=models.CASCADE, verbose_name="问题")
+    submission = models.ForeignKey(to=Submission, verbose_name="提交", on_delete=models.CASCADE, related_name="answers")
+    problem = models.ForeignKey(to=Problem, on_delete=models.CASCADE, verbose_name="问题", related_name="answers")
     content = models.TextField(verbose_name="回答")
-    score = models.SmallIntegerField(verbose_name="得分", default=-1) # type: ignore
 
     class Meta:
         unique_together = ["submission", "problem"]
+        ordering = ["id"]

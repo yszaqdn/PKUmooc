@@ -1,7 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.schemas.coreapi import serializers
 from rest_framework.status import HTTP_302_FOUND
-from course.models import Course, Problem
+from course.models import Course, Problem, Answer, Submission
 from rest_framework.views import APIView, status
 from rest_framework.decorators import api_view
 from PKUmoocServer.settings import BASE_DIR
@@ -21,6 +21,7 @@ from course.serializers import (
     HomeworkDetailSerializer,
     ProblemDetailSerializer,
     ChoiceSerializer,
+    SubmissionSerializer,
 )
 
 from django.http import FileResponse, Http404
@@ -385,6 +386,14 @@ class HomeworkListView(APIView):
             return course
         serializer = HomeworkListSerializer(data=request.data, context={"request":request})
         if serializer.is_valid():
+            if serializer.validated_data.get("view_end_time") <= timezone.now():
+                return Response({"view_end_time": "Cannot be set that early!"}, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.validated_data.get("view_start_time") is not None and serializer.validated_data.get("view_end_time") <= serializer.validated_data.get("view_begin_time"):
+                return Response({"view_end_time": "Cannot be set that early!"}, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.validated_data.get("submit_end_time") <= timezone.now():
+                return Response({"submit_end_time": "Cannot be set that early!"}, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.validated_data.get("submit_start_time") is not None and serializer.validated_data.get("submit_end_time") <= serializer.validated_data.get("submit_begin_time"):
+                return Response({"submit_end_time": "Cannot be set that early!"}, status=status.HTTP_400_BAD_REQUEST)
             serializer.save(course=course, teacher=request.user.teacher)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -445,6 +454,7 @@ class ProblemListView(APIView):
         serializer = ProblemDetailSerializer(problems, many=True, context={"request": request})
         datas = serializer.data
         new_datas = []
+        num = 1
         for data in datas:
             if request.user.is_student:
                 data.pop("expected_answer")
@@ -459,7 +469,10 @@ class ProblemListView(APIView):
                     data["type"] = "single"
             else:
                 data["type"] = "text"
+            data["url"] = request.build_absolute_uri() + str(data.get("id")) + "/"
+            data["num"] = num
             new_datas.append(data)
+            num += 1
         return Response(new_datas, status=status.HTTP_200_OK)
 
 
@@ -483,3 +496,156 @@ class ProblemListView(APIView):
         problem = serializer.save(teacher=request.user.teacher, homework=homework)
         choice_serializer.save(problem=problem)
         return Response(status=status.HTTP_200_OK)
+
+
+class SubmissionDetailView(APIView):
+    lookup_field = "id"
+
+    @staticmethod
+    def get_object(request, pk1, pk2, pk):
+        homework = HomeworkDetailView.get_object(request, pk1, pk2)
+        if isinstance(homework, Response):
+            return homework
+        try:
+            submission = homework.submissions.all().get(pk=pk)
+            if request.user.is_teacher and not submission.is_submitted:
+                raise Http404
+        except:
+            raise Http404
+        return submission
+
+    def get(self, request, pk1, pk2, pk):
+        submission = self.get_object(request, pk1, pk2, pk)
+        if isinstance(submission, Response):
+            return submission
+        if request.user.is_student and not request.user.student == submission.student:
+            return Response({"detail": "You have no right to access other's submissions"}, status=status.HTTP_403_FORBIDDEN)
+        homework = HomeworkDetailView.get_object(request, pk1, pk2)
+        if isinstance(homework, Response):
+            return homework
+        try:
+            problems = homework.problems.all()
+        except:
+            return Response({"detail": "No problems found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ProblemDetailSerializer(problems, many=True, context={"request": request})
+        datas = serializer.data
+        new_datas = []
+        num = 1
+        for data in datas:
+            if request.user.is_student:
+                data.pop("expected_answer")
+            problem = Problem.objects.get(pk=data.get("id")) # type: ignore
+            if problem.is_choice_problem:
+                choices = ChoiceSerializer(problem.choice).data
+                is_multiple = choices.pop("is_multiple")
+                data.update(choices)
+                if is_multiple:
+                    data["type"] = "multiple"
+                else:
+                    data["type"] = "single"
+            else:
+                data["type"] = "text"
+            data["num"] = num
+            try:
+                data["my_answer"] = submission.answers.get(problem=problem).content
+            except:
+                data["my_answer"] = "Not done!"
+            new_datas.append(data)
+            num += 1
+        return Response(new_datas, status=status.HTTP_200_OK)
+
+    def put(self, request, pk1, pk2, pk):
+        submission = self.get_object(request, pk1, pk2, pk)
+        if isinstance(submission, Response):
+            return submission
+        if submission.is_submitted and request.user.is_student:
+            return Response({"detail": "You cannot edit a submitted homework."}, status=status.HTTP_403_FORBIDDEN)
+        data = request.data.copy()
+        answers = data.get("answers")
+        response = {}
+        homework = HomeworkDetailView.get_object(request, pk1, pk2)
+        if isinstance(homework, Response):
+            return homework
+        if answers is not None and isinstance(answers, list) and request.user.is_student and submission.student==request.user.student:
+            try:
+                problems = homework.problems.all()
+            except:
+                return Response({"detail": "No problems found"}, status=status.HTTP_404_NOT_FOUND)
+            num = 0
+            for problem in problems:
+                if num >= len(answers):
+                    break
+                answer, _ = Answer.objects.get_or_create(submission=submission, problem=problem) # type: ignore
+                answer.content = answers[num]
+                answer.save()
+                num += 1
+            response["answers"] = "Successfully modified!"
+        if data.get("submit") is not None and request.user.is_student:
+            if timezone.now() < homework.submit_begin_time:
+                response["submit"] = "Too early!"
+            elif timezone.now() > homework.submit_end_time:
+                response["submit"] = "Too late!"
+            else:
+                submission.is_submitted = (data.get("submit") == True or data.get("submit") == "True" or data.get("submit") == "true")
+                submission.save()
+                if submission.is_submitted:
+                    response["submit"] = "Success!"
+                else:
+                    response["submit"] = "Not submitted yet!"
+        if data.get("score") is not None and isinstance(data.get("score"), int) and request.user.is_teacher:
+            submission.score = data.get("score")
+            submission.is_checked = True
+            submission.save()
+            response["score"] = data.get("score")
+        if data.get("remark") is not None and isinstance(data.get("remark"), str) and request.user.is_teacher:
+            submission.remark = data.get("remark")
+            submission.is_checked = True
+            submission.save()
+            response["remark"] = data.get("remark")
+        return Response(response, status=status.HTTP_200_OK)
+
+            
+
+    def delete(self, request, pk1, pk2, pk):
+        submission = self.get_object(request, pk1, pk2, pk)
+        if isinstance(submission, Response):
+            return submission
+        if submission.is_submitted and request.user.is_student:
+            return Response({"detail": "You can not delete a submitted homework"}, status=status.HTTP_403_FORBIDDEN)
+        submission.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SubmissionListView(APIView):
+    lookup_field="id"
+    def get(self, request, pk1, pk2):
+        homework = HomeworkDetailView.get_object(request, pk1,  pk2)
+        if isinstance(homework, Response):
+            return homework
+        try:
+            if request.user.is_student:
+                submits = homework.submissions.all().filter(student=request.user.student)
+            elif request.user.is_teacher:
+                submits = homework.submissions.all().filter(is_submitted=True)
+            else:
+                return Response({"detail": "You must be a student or a teacher to see this"}, status=status.HTTP_403_FORBIDDEN)
+        except:
+            return Response({"detail": "No submissions found"}, status=status.HTTP_200_OK)
+        serializer = SubmissionSerializer(submits, many=True, context={"request": request})
+        datas = serializer.data
+        new_datas = []
+        for data in datas:
+            i = data.get("id")
+            data["url"] = request.build_absolute_uri() + str(i) + "/"
+            new_datas.append(data)
+        return Response(new_datas, status=status.HTTP_200_OK)
+
+    def post(self, request, pk1, pk2):
+        if not request.user.is_student:
+            return Response({"detail": "Only a teacher can submit to a homework"}, status=status.HTTP_403_FORBIDDEN)
+        homework = HomeworkDetailView.get_object(request, pk1, pk2)
+        if isinstance(homework, Response):
+            return homework
+        submission = Submission(student=request.user.student, homework=homework)
+        submission.save()
+        return Response({"detail": "Created Successfully!"}, status=status.HTTP_200_OK)

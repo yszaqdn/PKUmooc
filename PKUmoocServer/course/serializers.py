@@ -1,5 +1,5 @@
 from rest_framework.schemas.coreapi import serializers
-from course.models import Course, Material, Picture, Homework, Problem, Choice
+from course.models import Course, Material, Picture, Homework, Problem, Choice, Submission
 from user_info.models import Student, Teacher
 
 
@@ -201,4 +201,25 @@ class ChoiceSerializer(serializers.ModelSerializer):
             "choiceC",
             "choiceD",
             "is_multiple"
+        ]
+
+
+class SubmissionSerializer(serializers.ModelSerializer):
+    student = serializers.StringRelatedField()
+    homework = serializers.StringRelatedField()
+    class Meta:
+        model = Submission
+        fields = [
+            "id",
+            "student",
+            "homework",
+            "is_submitted",
+            "is_checked",
+            "score",
+            "remark",
+        ]
+        read_only_fields = [
+            "id",
+            "student",
+            "homework",
         ]

@@ -14,4 +14,6 @@ urlpatterns = [
     path("<str:pk1>/homework/<int:pk>/", views.HomeworkDetailView.as_view(), name="homework-detail"),
     path("<str:pk1>/homework/<int:pk2>/problem/", views.ProblemListView.as_view(), name="problem-list"),
     path("<str:pk1>/homework/<int:pk2>/problem/<int:pk>/", views.ProblemDetailView.as_view(), name="problem-detail"),
+    path("<str:pk1>/homework/<int:pk2>/submission/", views.SubmissionListView.as_view(), name="submission-list"),
+    path("<str:pk1>/homework/<int:pk2>/submission/<int:pk>/", views.SubmissionDetailView.as_view(), name="submission-detail")
 ]
