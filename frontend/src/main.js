@@ -3,9 +3,11 @@ import './assets/main.css'
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router.js'
+import Antd from 'ant-design-vue';
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
-const app = createApp(App)
+import 'ant-design-vue/dist/reset.css';
+const app = createApp(App).use(Antd);
 
 app.use(router)
 app.use(ElementPlus)
