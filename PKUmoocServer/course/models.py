@@ -1,5 +1,7 @@
 from django.db import models
 from datetime import datetime
+
+from django.db.models.fields.files import default_storage
 from user_info.models import Teacher, Student
 from django.utils import timezone
 import uuid
@@ -31,7 +33,7 @@ class Material(models.Model):
     course = models.ForeignKey(to=Course, on_delete=models.CASCADE, verbose_name="课程", related_name="materials")
     created_time = models.DateTimeField(default=timezone.now, verbose_name="创建时间")
     updated_time = models.DateTimeField(auto_now=True)
-    is_public = models.BooleanField(default=False, verbose_name="是否公开")
+    is_public = models.BooleanField(default=False, verbose_name="是否公开") # type: ignore
 
     class Meta:
         ordering = ["-updated_time"]
@@ -71,28 +73,49 @@ class Homework(models.Model):
         ordering = ["-submit_end_time"]
 
 
-choices = (
-    ("A", "A"),
-    ("B", "B"),
-    ("C", "C"),
-    ("AB", "AB"),
-    ("BC", "BC"),
-    ("AC", "AC"),
-    ("ABC", "ABC"),
-)
-
-
-class ChoiceProblem(models.Model):
+class Problem(models.Model):
     id = models.AutoField(primary_key=True, verbose_name="题目编号")
-    is_multiple = models.BooleanField(verbose_name="是否多选")
     description = models.TextField(verbose_name="题目描述")
-    choiceA = models.TextField(verbose_name="选项A")
-    choiceB = models.TextField(verbose_name="选项B")
-    choiceC = models.TextField(verbose_name="选项C")
     points = models.PositiveSmallIntegerField(verbose_name="分数")
-    answer = models.CharField(max_length=3, choices=choices, verbose_name="参考答案")
+    expected_answer = models.TextField(verbose_name="参考答案")
     teacher = models.ForeignKey(to=Teacher, verbose_name="上传者", on_delete=models.CASCADE)
-    homework = models.ForeignKey(to=Homework, verbose_name="作业", on_delete=models.CASCADE, related_name="choiceproblems")
+    homework = models.ForeignKey(to=Homework, verbose_name="作业", on_delete=models.CASCADE, related_name="problems")
+
+    @property
+    def is_choice_problem(self):
+        if hasattr(self, "choice"):
+            return True
+        return False
 
     def __str__(self):
-        return "%s[CP: %d]" %(self.homework, self.id)
+        return "%s[P%d]" %(self.homework, self.id)
+
+class Choice(models.Model):
+    problem = models.OneToOneField(to=Problem, primary_key=True, on_delete=models.CASCADE, verbose_name="问题")
+    choiceA = models.TextField(verbose_name="A")
+    choiceB = models.TextField(verbose_name="B")
+    choiceC = models.TextField(verbose_name="C")
+    choiceD = models.TextField(verbose_name="D")
+    is_multiple = models.BooleanField(default=False, verbose_name="是否多选") # type: ignore
+
+    def __str__(self):
+        return "%s-choices" % self.problem
+
+class Submission(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="编号")
+    student = models.ForeignKey(to=Student, verbose_name="提交者", on_delete=models.CASCADE)
+    homework = models.ForeignKey(to=Homework, verbose_name="作业", on_delete=models.CASCADE)
+    is_submitted = models.BooleanField(default=False, verbose_name="是否已提交") # type: ignore
+    is_checked = models.BooleanField(default=False, verbose_name="是否已批改") # type: ignore
+    score = models.SmallIntegerField(default=-1, verbose_name="成绩") # type: ignore
+    remark = models.TextField(verbose_name="评语")
+
+class Answer(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="编号")
+    submission = models.ForeignKey(to=Submission, verbose_name="提交", on_delete=models.CASCADE)
+    problem = models.ForeignKey(to=Problem, on_delete=models.CASCADE, verbose_name="问题")
+    content = models.TextField(verbose_name="回答")
+    score = models.SmallIntegerField(verbose_name="得分", default=-1) # type: ignore
+
+    class Meta:
+        unique_together = ["submission", "problem"]

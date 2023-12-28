@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.schemas.coreapi import serializers
-from course.models import Course
+from rest_framework.status import HTTP_302_FOUND
+from course.models import Course, Problem
 from rest_framework.views import APIView, status
 from rest_framework.decorators import api_view
 from PKUmoocServer.settings import BASE_DIR
@@ -18,6 +19,8 @@ from course.serializers import (
     PictureCreateSerializer,
     HomeworkListSerializer,
     HomeworkDetailSerializer,
+    ProblemDetailSerializer,
+    ChoiceSerializer,
 )
 
 from django.http import FileResponse, Http404
@@ -323,7 +326,7 @@ class HomeworkDetailView(APIView):
         except:
             raise Http404
         if request.user.is_student:
-            view_start_time = homework.view_start_time
+            view_start_time = homework.view_begin_time
             view_end_time = homework.view_end_time
             if timezone.now() > view_end_time:
                 return Response({"detail": "The homework cannot be seen any more"}, status=status.HTTP_404_NOT_FOUND)
@@ -385,3 +388,98 @@ class HomeworkListView(APIView):
             serializer.save(course=course, teacher=request.user.teacher)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProblemDetailView(APIView):
+    permission_classes = [IsTeacherOrReadOnly]
+    lookup_field = "id"
+    @staticmethod
+    def get_object(request, pk1, pk2, pk):
+        homework = HomeworkDetailView.get_object(request, pk1, pk2)
+        if isinstance(homework, Response):
+            return homework
+        try:
+            problem = homework.problems.all().get(pk=pk)
+        except:
+            raise Http404
+        return problem
+
+    def get(self, request, pk1, pk2, pk):
+        problem = self.get_object(request, pk1, pk2, pk)
+        if isinstance(problem, Response):
+            return problem
+        data = ProblemDetailSerializer(problem).data
+        if problem.is_choice_problem:
+            choices = ChoiceSerializer(problem.choice).data
+            is_multiple = choices.pop("is_multiple")
+            data.update(choices)
+            if is_multiple:
+                data["type"] = "multiple"
+            else:
+                data["type"] = "single"
+        else:
+            data["type"] = "text"
+        if request.user.is_student:
+            data.pop("expected_answer")
+        return Response(data, status=status.HTTP_200_OK)
+
+    def delete(self, request, pk1, pk2, pk):
+        problem = self.get_object(request, pk1, pk2, pk)
+        if isinstance(problem, Response):
+            return problem
+        problem.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ProblemListView(APIView):
+    permission_classes = [IsTeacherOrReadOnly]
+    lookup_field = "id"
+    def get(self, request, pk1, pk2):
+        homework = HomeworkDetailView.get_object(request, pk1, pk2)
+        if isinstance(homework, Response):
+            return homework
+        try:
+            problems = homework.problems.all()
+        except:
+            return Response({"detail": "No problems found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ProblemDetailSerializer(problems, many=True, context={"request": request})
+        datas = serializer.data
+        new_datas = []
+        for data in datas:
+            if request.user.is_student:
+                data.pop("expected_answer")
+            problem = Problem.objects.get(pk=data.get("id")) # type: ignore
+            if problem.is_choice_problem:
+                choices = ChoiceSerializer(problem.choice).data
+                is_multiple = choices.pop("is_multiple")
+                data.update(choices)
+                if is_multiple:
+                    data["type"] = "multiple"
+                else:
+                    data["type"] = "single"
+            else:
+                data["type"] = "text"
+            new_datas.append(data)
+        return Response(new_datas, status=status.HTTP_200_OK)
+
+
+    def post(self, request, pk1, pk2):
+        homework = HomeworkDetailView.get_object(request, pk1, pk2)
+        if isinstance(homework, Response):
+            return homework
+        serializer = ProblemDetailSerializer(data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if request.data.get("type") not in ["single", "multiple", "text"]:
+            return Response({"type": "Must in {single, multiple, text}"}, status=status.HTTP_400_BAD_REQUEST)
+        if request.data.get("type") == "text":
+            serializer.save(teacher=request.user.teacher, homework=homework)
+            return Response(status=status.HTTP_200_OK)
+        data = request.data.copy()
+        data["is_multiple"] = (data.get("type") == "multiple")
+        choice_serializer = ChoiceSerializer(data=data, context={"request": request})
+        if not choice_serializer.is_valid():
+            return Response(choice_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        problem = serializer.save(teacher=request.user.teacher, homework=homework)
+        choice_serializer.save(problem=problem)
+        return Response(status=status.HTTP_200_OK)

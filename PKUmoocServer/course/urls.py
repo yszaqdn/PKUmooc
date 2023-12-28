@@ -12,4 +12,6 @@ urlpatterns = [
     path("<str:pk1>/material/<int:pk2>/picture/<str:pk>/download/", views.download_picture, name="picture-download"),
     path("<str:pk1>/homework/", views.HomeworkListView.as_view(), name="homework-list"),
     path("<str:pk1>/homework/<int:pk>/", views.HomeworkDetailView.as_view(), name="homework-detail"),
+    path("<str:pk1>/homework/<int:pk2>/problem/", views.ProblemListView.as_view(), name="problem-list"),
+    path("<str:pk1>/homework/<int:pk2>/problem/<int:pk>/", views.ProblemDetailView.as_view(), name="problem-detail"),
 ]

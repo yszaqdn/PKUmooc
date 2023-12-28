@@ -1,5 +1,5 @@
 from rest_framework.schemas.coreapi import serializers
-from course.models import Course, Material, Picture, Homework
+from course.models import Course, Material, Picture, Homework, Problem, Choice
 from user_info.models import Student, Teacher
 
 
@@ -170,3 +170,35 @@ class HomeworkListSerializer(serializers.ModelSerializer):
             "submit_end_time",
         ]
         read_only_fields = ["id"]
+
+
+class ProblemDetailSerializer(serializers.ModelSerializer):
+    teacher = serializers.StringRelatedField()
+    homework = serializers.StringRelatedField()
+    class Meta:
+        model = Problem
+        fields = [
+            "id",
+            "description",
+            "points",
+            "expected_answer",
+            "teacher",
+            "homework",
+        ]
+        read_only_fields = [
+            "id",
+            "teacher",
+            "homework",
+        ]
+
+
+class ChoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Choice
+        fields = [
+            "choiceA",
+            "choiceB",
+            "choiceC",
+            "choiceD",
+            "is_multiple"
+        ]
