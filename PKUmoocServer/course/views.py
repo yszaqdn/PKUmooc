@@ -310,7 +310,7 @@ def download_picture(request, pk1, pk2, pk):
     file_obj = PictureDetailView.get_object(request, pk1, pk2, pk)
     if isinstance(file_obj, Response):
         return file_obj
-    return FileResponse(open(file_obj.file_path.path, 'rb'))
+    return FileResponse(open("." + file_obj.file_path.url, 'rb'))
 
 
 
