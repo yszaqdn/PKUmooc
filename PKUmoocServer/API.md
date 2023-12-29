@@ -539,3 +539,64 @@ GET同上, 只是少了url. delete可以删除. 老师可以删除, 学生只能
 ### 14. /api/course/\<str:pk1\>/material/\<int:pk2\>/picture/\<int:pk\>/download/ 图片播放和下载接口
 * 支持的操作: GET
 * 貌似和直接访问file_path是一个效果, 不过这个需要身份认证.
+
+
+### 15. /api/course/\<str:pk1\>/student/ 学生列表
+* 支持的操作 GET
+* 权限: 登陆且选了课的同学老师
+* 内容如下:
+  ```json
+  [
+      {
+          "id": "2000011111",
+          "name": "w",
+          "url": "http://127.0.0.1:8000/api/course/10000/student/2000011111/"
+      },
+      {
+          "id": "2000011110",
+          "name": "www",
+          "url": "http://127.0.0.1:8000/api/course/10000/student/2000011110/"
+      },
+      {
+          "id": "2000011112",
+          "name": "2000011111",
+          "url": "http://127.0.0.1:8000/api/course/10000/student/2000011112/"
+      },
+  ]
+  ```
+
+### 16. /api/course/\<str:pk1\>/student/\<int:pk\>/ 学生详情
+* 支持的操作 GET
+* 权限: 老师, 或者学生本人
+* 内容如下
+  ```json
+  {
+      "id": "2000015151",
+      "name": "w",
+      "dept": "w",
+      "materials": [
+          {
+              "id": 4,
+              "title": "1-3",
+              "url": "http://127.0.0.1:8000/api/course/10000/material/4/",
+              "has_read": false
+          },
+          {
+              "id": 2,
+              "title": "1-2",
+              "url": "http://127.0.0.1:8000/api/course/10000/material/2/",
+              "has_read": true
+          }
+      ],
+      "homeworks": [
+          {
+              "id": 1,
+              "title": "1-1",
+              "url": "http://127.0.0.1:8000/api/course/10000/homework/1/",
+              "is_submitted": false,
+              "is_checked": false,
+              "score": -1
+          }
+      ]
+  }
+  ```

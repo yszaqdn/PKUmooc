@@ -1,3 +1,4 @@
+from django.db import reset_queries
 from rest_framework.response import Response
 from rest_framework.schemas.coreapi import serializers
 from rest_framework.status import HTTP_302_FOUND
@@ -642,10 +643,112 @@ class SubmissionListView(APIView):
 
     def post(self, request, pk1, pk2):
         if not request.user.is_student:
-            return Response({"detail": "Only a teacher can submit to a homework"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "Only a student can submit to a homework"}, status=status.HTTP_403_FORBIDDEN)
         homework = HomeworkDetailView.get_object(request, pk1, pk2)
         if isinstance(homework, Response):
             return homework
         submission = Submission(student=request.user.student, homework=homework)
         submission.save()
         return Response({"detail": "Created Successfully!"}, status=status.HTTP_200_OK)
+
+
+class StudentDetailView(APIView):
+    @staticmethod
+    def get_object(request, pk1, pk):
+        course = CourseDetailView.get_object(request, pk1)
+        if isinstance(course, Response):
+            return course
+        try:
+            user = User.objects.get(username=pk)
+        except:
+            raise Http404
+        if not user.is_authenticated:
+            raise Http404
+        if not user.is_student:
+            raise Http404
+        if request.user.is_student and not user.student == request.user.student:
+            raise Http404
+        return user.student
+
+    def get(self, request, pk1, pk):
+        student = self.get_object(request, pk1, pk)
+        if isinstance(student, Response):
+            return student
+        course = CourseDetailView.get_object(request, pk1)
+        if isinstance(course, Response):
+            return course
+        response = {}
+        response["id"] = student.user.username
+        response["name"] = student.name
+        response["dept"] = student.dept
+        try:
+            materials = course.materials.all().filter(is_public=True)
+        except:
+            response["materials"] = []
+        else:
+            response["materials"] = []
+            for material in materials:
+                material_response = {}
+                material_response["id"] = material.id
+                material_response["title"] = material.title
+                material_response["url"] = "http://" + request.get_host() + "/api/course/" + str(course.id) + "/material/" + str(material.id) + "/"
+                try:
+                    material.students.get(user=student.user)
+                except:
+                    material_response["has_read"] = False
+                else:
+                    material_response["has_read"] = True
+                response["materials"].append(material_response)
+        try:
+            homeworks = course.homeworks.all()
+        except:
+            response["homeworks"] = []
+        else:
+            response["homeworks"] = []
+            for homework in homeworks:
+                homework_response = {}
+                homework_response["id"] = homework.id
+                homework_response["title"] = homework.title
+                homework_response["url"] = "http://" + request.get_host() + "/api/course/" + str(course.id) + "/homework/" + str(homework.id) + "/"
+                try:
+                    submissions = homework.submissions.filter(student=student).filter(is_submitted=True)
+                except:
+                    homework_response["is_submitted"] = False
+                    homework_response["is_checked"] = False
+                else:
+                    if len(submissions) == 0:
+                        homework_response["is_submitted"] = False
+                        homework_response["is_checked"] = False
+                    else:
+                        homework_response["is_submitted"] = True
+                        try:
+                            checked_submissions = submissions.filter(is_checked=True)
+                        except:
+                            homework_response["is_checked"] = False
+                        else:
+                            if len(checked_submissions) == 0:
+                                homework_response["is_checked"] = False
+                            else:
+                                homework_response["is_checked"] = True
+                                homework_response["score"] = checked_submissions.last().score
+                    if homework_response.get("score") is None:
+                        homework_response["score"] = -1
+                response["homeworks"].append(homework_response)
+        return Response(response, status=status.HTTP_200_OK)
+
+
+class StudentListView(APIView):
+    def get(self, request, pk1):
+        if not request.user.is_authenticated:
+            return Response({"detail": "You must login to see it"}, status=status.HTTP_403_FORBIDDEN)
+        course = CourseDetailView.get_object(request, pk1)
+        if isinstance(course, Response):
+            return course
+        response = []
+        for student in course.students.all():
+            student_response = {}
+            student_response["id"] = student.user.username
+            student_response["name"] = student.name
+            student_response["url"] = request.build_absolute_uri() + str(student.user.username) + "/"
+            response.append(student_response)
+        return Response(response, status=status.HTTP_200_OK)
