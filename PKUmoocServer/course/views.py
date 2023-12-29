@@ -152,7 +152,17 @@ class CourseListView(APIView):
         if request.user.is_teacher:
             serializer = CourseListSerializer(data=request.data, context={"request": request})
             if serializer.is_valid():
-                serializer.save(teachers=[request.user.teacher], students=[])
+                students = []
+                if request.data.get("students") is not None and isinstance(request.data.get("students"), list):
+                    for id in request.data.get("students"):
+                        try:
+                            user = User.objects.get(username=id)
+                        except:
+                            pass
+                        else:
+                            if user.is_student:
+                                students.append(user.student)
+                serializer.save(teachers=[request.user.teacher], students=students)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"detail": "Only a teacher can create a course"}, status=status.HTTP_403_FORBIDDEN)
