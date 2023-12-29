@@ -109,7 +109,7 @@ export default {
                     value: 'Female',
                     label: '♀',
                 }],
-                identityOptions: [
+            identityOptions: [
                 {
                     value: 'teacher',
                     label: 'teacher',
@@ -189,7 +189,7 @@ export default {
     methods: {
 
         async EventRegister() {
-            let senddata ={
+            let senddata = {
                 action: 'register',
                 id: this.user.IDnum,
                 password: this.user.password,
@@ -197,7 +197,7 @@ export default {
                 email: this.user.email,
                 phone: this.user.phonenum,
                 name: this.user.name,
-                sex:this.user.sex,
+                sex: this.user.sex,
                 dept: this.user.dept,
                 identity: this.user.identity,
                 grade: this.user.grade,
@@ -207,26 +207,26 @@ export default {
                 if (valid) {
                     console.log(senddata);
                     await axios
-                    .post('/api/register/', senddata)
-                    .then( res => {
-                        console.log(res);
-                        if (res.status === 201) {
-                            this.$message({
-                                message: '注册成功',
-                                type: 'success'
-                            });
-                            this.$router.push('/login')
-                        } else {
-                            alert(res.data.id);
-                            this.$message({
-                                message: res.data.message,
-                                type: 'error'
-                            });
-                        }
-                    })
-                    .catch((err) => {
-                        console.log(err);
-                    });
+                        .post('/api/register/', senddata)
+                        .then(res => {
+                            console.log(res);
+                            if (res.status === 201) {
+                                this.$message({
+                                    message: '注册成功',
+                                    type: 'success'
+                                });
+                                this.$router.push('/login')
+                            } else {
+                                alert(res.data.id);
+                                this.$message({
+                                    message: res.data.message,
+                                    type: 'error'
+                                });
+                            }
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                        });
                 } else {
                     this.$message({
                         message: '请检查输入',
@@ -243,7 +243,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .registerBox {
     position: absolute;
     top: 50px;

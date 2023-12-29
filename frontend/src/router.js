@@ -7,6 +7,7 @@ import HomeTeacher from './components/HomeTeacher.vue'
 import StudentCourse from './components/StudentCourse.vue'
 import TeacherCourse from './components/TeacherCourse.vue'
 import CreateCourse from './components/CreateCourse.vue'
+import StudentMaterial from './components/StudentMaterial.vue'
 
 import APP from './App.vue'
 const router = createRouter({
@@ -38,6 +39,12 @@ const router = createRouter({
             component: StudentCourse,
             name: 'StudentCourse',
             meta: { title: "课程详情" },
+        },
+        {   
+            path: '/student/course/:id/material/:materialID',
+            component: StudentMaterial,
+            name: 'StudentMaterial',
+            meta: { title: "资料详情" },
         },
         {
             path: '/teacher/home',

@@ -1,5 +1,5 @@
 <template>
-    <div id="course-box">
+    <div id="tearch-list">
         <div style="
             display: flex;
             font-size: bolder;
@@ -85,8 +85,8 @@ export default {
 
 </script>
 
-<style>
-#course-box {
+<style scoped>
+#tearch-list {
     position: absolute;
     top: 50px;
     left: 100px;

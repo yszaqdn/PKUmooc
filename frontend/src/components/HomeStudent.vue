@@ -56,7 +56,12 @@
                 </div>
             </div>
             <div class="material-title">
+                <router-link :to="{
+                    name: 'StudentMaterial',
+                    params: { id: getCourseIdFromUrl(material.url), materialID: material.id }
+                }">
                 {{ material.title }}
+                </router-link>
             </div>
         </div>
     </div>
@@ -77,7 +82,12 @@ export default {
         formatted_time: function (iso_date_string) {
             const date = new Date(iso_date_string);
             return date.toLocaleDateString()
-        }
+        },
+        getCourseIdFromUrl(url) {
+            const parts = url.split('/');
+            const courseIndex = parts.indexOf('course');
+            return parts[courseIndex + 1];
+        },
     },
     async created() {
         let token = localStorage.getItem('token');
@@ -136,7 +146,7 @@ export default {
 
 </script>
 
-<style>
+<style scoped>
 #course-box {
     position: absolute;
     top: 50px;
@@ -201,7 +211,7 @@ export default {
 #material-box {
     position: absolute;
     top: 50px;
-    left: 600px;
+    left: 700px;
     background: #f0f0f0;
     border: 2px solid rgb(195, 190, 190);
     border-radius: 5px;

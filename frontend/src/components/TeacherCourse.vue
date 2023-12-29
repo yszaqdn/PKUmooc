@@ -47,7 +47,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .material-box {
     position: absolute;
     top: 50px;

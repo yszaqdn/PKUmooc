@@ -1,13 +1,28 @@
 <template>
     <div class="material-box">
+        <div style="
+            display: flex;
+            font-size: bolder;
+            font-family: Tahoma,Arial;
+            padding: 5px 0px 5px 5px;
+            
+        ">
+            <h1>Course Materials</h1>
+        </div>
         <div v-for="material in materials" :key="material.id" class="materials">
             <div class="material-info">
-            <div class="tag">
-                ID: {{ material.id }}
+                <div class="tag">
+                    ID: {{ material.id }}
+                </div>
             </div>
-            </div>
+            
             <div class="title">
-                {{ material.title }}
+                <router-link :to="{
+                    name: 'StudentMaterial',
+                    params: { id: this.$route.params.id, materialID: material.id }
+                }">
+                    {{ material.title }}
+                </router-link>
             </div>
         </div>
     </div>
@@ -47,16 +62,19 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .material-box {
     position: absolute;
     top: 50px;
     left: 20px;
+    padding: 2px 5px 2px 10px;
     border: 2px solid black;
+    background: #f0f0f0;
     border-radius: 5px;
-    width:40%;
-    
+    width: 40%;
+
 }
+
 .title {
     font-size: large;
     font-weight: bolder;
@@ -65,9 +83,11 @@ export default {
     text-decoration: none;
     padding: 5px 5px 5px 0;
 }
+
 .material-info {
     display: flex;
 }
+
 .tag {
     padding: 2px 5px 2px 5px;
     margin: 5px 5px 5px 0;
@@ -76,5 +96,4 @@ export default {
     background-color: #4e4e4e;
     color: whitesmoke;
     border-radius: 5px;
-}
-</style>
+}</style>

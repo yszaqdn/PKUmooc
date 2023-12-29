@@ -102,6 +102,7 @@ export default {
                                 }
                                 else{
                                     localStorage.setItem('identity', 'teacher')
+                                    localStorage.setItem('token',res.data.access)
                                     that.$router.push('/teacher/home')
                                 }
                                     
@@ -131,7 +132,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .loginBox {
     display: flex;
     flex-direction: column;
