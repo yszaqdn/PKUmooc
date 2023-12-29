@@ -17,22 +17,22 @@ class IsReadOnly(BasePermission):
     # read only 
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
-            return True
+            return request.user.is_authenticated
         return request.user.is_superuser
 
 
 class IsTeacherOrReadOnly(BasePermission):
-    message = '老师可创建或删除板块，其他人可阅读板块 '
+    message = '老师可创建或删除板块，其他登录后人可阅读板块 '
 
     # before creation of account, author = self
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
-            return True
-        return request.user.is_superuser or request.user.is_teacher #and request.user.is_authenticated #加上这个老师只可以创建或删除（自己创建的）板块
+            return request.user.is_authenticated
+        return request.user.is_superuser or request.user.is_teacher 
 
     def has_object_permission(self, request, view, obj):
         if request.method in SAFE_METHODS:
-            return True
+            return request.user.is_authenticated
         return request.user.is_superuser or request.user.is_teacher
 
 class IsTeacherOrOwner(BasePermission):
@@ -41,7 +41,7 @@ class IsTeacherOrOwner(BasePermission):
     # read only 
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
-            return True
+            return request.user.is_authenticated
         elif request.method in ["POST", "DELETE"]:
             return ((request.user.is_student and request.user.is_authenticated) 
                     or (request.user.is_teacher) or request.user.is_superuser)

@@ -31,6 +31,11 @@ from rest_framework_simplejwt.views import (
 # router.register(r'dept', views.DeptViewSet)
 # router.register(r'student', views.StudentViewSet, basename="student")
 # router.register(r'teacher', views.TeacherViewSet, basename="teacher")
+# router.register(r'Forum', views.ForumViewSet, basename="讨论区")
+# router.register(r'Post', views.PostViewSet, basename="帖子")
+# router.register(r'Reply', views.ReplyViewSet, basename="回复")
+# router.register(r'ForumSection', views.ForumSectionViewSet, basename="板块")
+
 #
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -41,5 +46,6 @@ urlpatterns = [
     path("api/register/", views.user_register, name="register"),
     # path("api/student/", views.student_register, name="register")
     path("api/course/", include("course.urls"), name="course"),
-    re_path(r"media/(?P<path>.*)$", serve, {"document_root":settings.MEDIA_ROOT})
+    re_path(r"media/(?P<path>.*)$", serve, {"document_root":settings.MEDIA_ROOT}),
+    # path("api/forum/", include("forum.urls"), name="forum")
 ]
