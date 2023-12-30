@@ -2,13 +2,13 @@ from django.db import reset_queries
 from rest_framework.response import Response
 from rest_framework.schemas.coreapi import serializers
 from rest_framework.status import HTTP_302_FOUND
-from course.models import Course, Problem, Answer, Submission
+from course.models import Course, Problem, Answer, Submission, Post
 from rest_framework.views import APIView, status
 from rest_framework.decorators import api_view
 from PKUmoocServer.settings import BASE_DIR
 import os
 from django.utils import timezone
-from course.permissions import IsTeacherOrReadOnly
+from course.permissions import IsTeacherOrReadOnly, IsTeacherOrOwner
 
 
 from course.serializers import (
@@ -23,11 +23,13 @@ from course.serializers import (
     ProblemDetailSerializer,
     ChoiceSerializer,
     SubmissionSerializer,
+    ForumSectionSerializer,
+    PostSerializer,
 )
 
 from django.http import FileResponse, Http404
 from user_info.models import User, Student, Teacher
-from rest_framework import generics
+from rest_framework import generics, viewsets
 
 from course.utils import img_proccess_save
 
@@ -762,3 +764,40 @@ class StudentListView(APIView):
             student_response["url"] = request.build_absolute_uri() + str(student.user.username) + "/"
             response.append(student_response)
         return Response(response, status=status.HTTP_200_OK)
+
+
+class ForumSectionListView(APIView):
+    def get(self, request, pk1):
+        if not request.user.is_authenticated:
+            return Response({"detail": "You must login to see it"}, status=status.HTTP_403_FORBIDDEN)
+        course = CourseDetailView.get_object(request, pk1)
+        if isinstance(course, Response):
+            return course
+        try:
+            forums = course.forums
+        except:
+            return Response({"detail": "No forum section found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ForumSectionSerializer(forums, many=True, context={"request": request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, pk1):
+        course = CourseDetailView.get_object(request, pk1)
+        if isinstance(course, Response):
+            return course
+        if not request.user.is_teacher:
+            return Response({"detail": "Only a teacher can create a Forum Section"}, status=status.HTTP_403_FORBIDDEN)
+        serializer = ForumSectionSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid():
+            serializer.save(course=course)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PostViewSet(viewsets.ModelViewSet):
+    lookup_field="id"
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsTeacherOrOwner]
+
+    def perform_create(self, serializer):
+        serializer.save(author = self.request.user)
+

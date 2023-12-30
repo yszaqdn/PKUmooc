@@ -2,7 +2,7 @@ from django.db import models
 from datetime import datetime
 
 from django.db.models.fields.files import default_storage
-from user_info.models import Teacher, Student
+from user_info.models import Teacher, Student, User
 from django.utils import timezone
 import uuid
 
@@ -119,3 +119,33 @@ class Answer(models.Model):
     class Meta:
         unique_together = ["submission", "problem"]
         ordering = ["id"]
+
+
+class ForumSection(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="编号")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, verbose_name="讨论区", related_name="forums")
+    name = models.CharField(max_length=100,verbose_name="板块")
+    def __str__(self):
+        return self.name
+
+class Post(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="编号")
+    section = models.ForeignKey(ForumSection, on_delete=models.CASCADE, verbose_name="板块", related_name="posts")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="用户", related_name="posts")
+    content = models.TextField(verbose_name="帖子")
+    created_at = models.DateTimeField(default=timezone.now,verbose_name="发布时间")
+    class Meta:
+        ordering = ['-created_at']
+    def __str__(self):
+        return self.content
+
+class Reply(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="编号")
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, verbose_name="帖子", related_name="replies")
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="replies")
+    content = models.TextField(verbose_name="回复")
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="发布时间")
+    class Meta:
+        ordering = ['-created_at']
+    def __str__(self):
+        return self.content

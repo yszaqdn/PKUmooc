@@ -1,5 +1,9 @@
-from django.urls import path
+from django.urls import path, include
 from course import views
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r"post", views.PostViewSet)
 
 app_name="course"
 urlpatterns = [
@@ -18,4 +22,6 @@ urlpatterns = [
     path("<str:pk1>/homework/<int:pk2>/submission/<int:pk>/", views.SubmissionDetailView.as_view(), name="submission-detail"),
     path("<str:pk1>/student/", views.StudentListView.as_view(), name="student-list"),
     path("<str:pk1>/student/<int:pk>/", views.StudentDetailView.as_view(), name="student-detail"),
+    path("<str:pk1>/section/", views.ForumSectionListView.as_view(), name="section-list"),
+    path("<str:pk1>/", include(router.urls)),
 ]

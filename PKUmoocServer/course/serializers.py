@@ -1,5 +1,6 @@
 from rest_framework.schemas.coreapi import serializers
-from course.models import Course, Material, Picture, Homework, Problem, Choice, Submission
+from rest_framework.serializers import SerializerMetaclass
+from course.models import Course, Material, Picture, Homework, Problem, Choice, Submission, ForumSection, Post
 from user_info.models import Student, Teacher
 
 
@@ -222,4 +223,37 @@ class SubmissionSerializer(serializers.ModelSerializer):
             "id",
             "student",
             "homework",
+        ]
+
+
+class ForumSectionSerializer(serializers.ModelSerializer):
+    course = serializers.StringRelatedField()
+    class Meta:
+        model = ForumSection
+        fields = [
+            "course",
+            "name"
+        ]
+
+
+class PostSerializer(serializers.ModelSerializer):
+    section = serializers.SlugRelatedField(
+        queryset=ForumSection.objects.all(), # type: ignore
+        required=True,
+        slug_field="name",
+    )
+    author = serializers.StringRelatedField()
+    class Meta:
+        model = Post
+        fields = [
+            "id",
+            "author",
+            "content",
+            "created_at",
+            "section"
+        ]
+        read_only_fields = [
+            "id",
+            "author",
+            "created_at",
         ]
