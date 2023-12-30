@@ -55,7 +55,7 @@ for i in range(2,7): #control i in single digit range, else add extra line to co
     number = random.randint(10000000000,19999999999) # phone number
     username = f"880000000{i}" # needs to be 10 digits
     user = User.objects.create_user(username=username, password='project123', email=f'{username}@stu.pku.edu.cn')
-    if i == 1:
+    if i == 3:
         Teacher(dept="智能", name =random.choice(name_list), 
             sex = random.choice(sex), phone = str(number), id = username,user=user).save()
     elif i == 2:
@@ -73,7 +73,7 @@ for i in range(21,45): #control i in double digit range, else edit username to a
     grade = random.choice(grades)
     username = f"{grade}000000{i}" # needs to be 10 digits
     user = User.objects.create_user(username=username, password='project123', email=f'{username}@stu.pku.edu.cn')
-    if i == 1:
+    if i == 21:
         Student(dept="计算机", name ="王照明", grade = 2000+grade,
             sex = "Male", phone = str(number), id = username,user=user).save()
     else:
@@ -130,9 +130,9 @@ for rel_course in Course.objects.all():
                 )
         x.save()
         material_id+=1 #not redundant, else only last course is saved...
-    # many to many for students
-    for student in random.choices(rel_course.students.all(),k=random.randint(1,len(rel_course.students.all()))):
-        x.students.add(student)
+        # many to many for students
+        for student in random.choices(rel_course.students.all(),k=random.randint(1,len(rel_course.students.all()))):
+            x.students.add(student)
 
 
 #=== 作业: (5) ===
