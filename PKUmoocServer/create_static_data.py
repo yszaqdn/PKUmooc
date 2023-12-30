@@ -1,19 +1,8 @@
 '''
 To run, 
-`python manage.py shell < create_static_data.py`
-
-Instructions:
-老师: (5) 张老师 + 智能
-学生: (20) 王X 明 + 计算机
-课程: (10)
-课程材料: (3)
-
-位学生至少要有3次作业提交
-至少一半的作业已经由教师打分
-
-需要有的查询：
-讨论区发帖次数前十的用户
-有些学生作业逾期未交
+`
+python manage.py shell < create_static_data.py
+`
 '''
 
 from user_info.models import User,Student,Teacher
