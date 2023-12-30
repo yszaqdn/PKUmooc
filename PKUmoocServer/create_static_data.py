@@ -59,7 +59,7 @@ for i in range(2,7): #control i in single digit range, else add extra line to co
         Teacher(dept="智能", name =random.choice(name_list), 
             sex = random.choice(sex), phone = str(number), id = username,user=user).save()
     elif i == 2:
-        Teacher(dept=random.choice(dept_list), name ="张雪山", 
+        Teacher(dept=random.choice(dept_list), name ="张老师", 
             sex = random.choice(sex), phone = str(number), id = username,user=user).save()
     else:
         Teacher(dept=random.choice(dept_list), name =random.choice(name_list), 
